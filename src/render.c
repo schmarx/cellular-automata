@@ -23,23 +23,27 @@ void render() {
 			rect.x = x * window_x / N;
 			rect.y = y * window_y / N;
 
+			int opacity = 255;
+			if (particles_moving[y * N + x]) {
+				opacity = 200;
+			}
 			if (particles[y * N + x].type == 1) {
-				SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+				SDL_SetRenderDrawColor(renderer, 255, 255, 0, opacity);
 				SDL_RenderFillRect(renderer, &rect);
 			} else if (particles[y * N + x].type == 2) {
-				SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+				SDL_SetRenderDrawColor(renderer, 0, 0, 255, opacity);
 				SDL_RenderFillRect(renderer, &rect);
 			} else if (particles[y * N + x].type == 3) {
-				SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+				SDL_SetRenderDrawColor(renderer, 50, 50, 50, opacity);
 				SDL_RenderFillRect(renderer, &rect);
 			} else if (particles[y * N + x].type == 4) {
-				SDL_SetRenderDrawColor(renderer, 255, 255, 200, 255);
+				SDL_SetRenderDrawColor(renderer, 255, 255, 200, opacity);
 				SDL_RenderFillRect(renderer, &rect);
 			} else if (particles[y * N + x].type == 5) {
-				SDL_SetRenderDrawColor(renderer, 150, 150, 0, 255);
+				SDL_SetRenderDrawColor(renderer, 150, 150, 0, opacity);
 				SDL_RenderFillRect(renderer, &rect);
 			} else if (particles[y * N + x].type == 6) {
-				SDL_SetRenderDrawColor(renderer, 50, 50, 0, 255);
+				SDL_SetRenderDrawColor(renderer, 50, 50, 0, opacity);
 				SDL_RenderFillRect(renderer, &rect);
 			}
 

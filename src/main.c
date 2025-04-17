@@ -25,6 +25,7 @@ int place_type = 1;
 int N;
 obj *particles = NULL;
 obj *particles_next = NULL;
+int *particles_moving = NULL;
 
 void sout(char *str) {
 	printf("%s\n", str);
@@ -54,6 +55,7 @@ void init(char *args[]) {
 
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_CreateWindowAndRenderer(window_x, window_y, SDL_WINDOW_SHOWN, &window, &renderer);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 100, 100);
 
 	// TODO: texture color change not currently working
@@ -63,6 +65,7 @@ void init(char *args[]) {
 
 	particles = calloc(sizeof(obj), N * N);
 	particles_next = calloc(sizeof(obj), N * N);
+	particles_moving = calloc(sizeof(int), N * N);
 	generate();
 }
 
@@ -75,6 +78,7 @@ void end() {
 
 	free(particles);
 	free(particles_next);
+	free(particles_moving);
 }
 
 void run() {

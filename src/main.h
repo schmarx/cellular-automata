@@ -21,5 +21,6 @@ typedef struct {
 
 extern obj *particles;
 extern obj *particles_next;
+extern int *particles_moving;
 // extern int *particle_counts;
 extern int N;
