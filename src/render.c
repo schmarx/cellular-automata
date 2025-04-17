@@ -26,6 +26,21 @@ void render() {
 			if (particles[y * N + x].type == 1) {
 				SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
 				SDL_RenderFillRect(renderer, &rect);
+			} else if (particles[y * N + x].type == 2) {
+				SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+				SDL_RenderFillRect(renderer, &rect);
+			} else if (particles[y * N + x].type == 3) {
+				SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+				SDL_RenderFillRect(renderer, &rect);
+			} else if (particles[y * N + x].type == 4) {
+				SDL_SetRenderDrawColor(renderer, 255, 255, 200, 255);
+				SDL_RenderFillRect(renderer, &rect);
+			} else if (particles[y * N + x].type == 5) {
+				SDL_SetRenderDrawColor(renderer, 150, 150, 0, 255);
+				SDL_RenderFillRect(renderer, &rect);
+			} else if (particles[y * N + x].type == 6) {
+				SDL_SetRenderDrawColor(renderer, 50, 50, 0, 255);
+				SDL_RenderFillRect(renderer, &rect);
 			}
 
 			// printf("(%i, %i)\n", rect.x, rect.y);

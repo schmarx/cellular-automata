@@ -20,6 +20,7 @@ int window_y = 500;
 
 int pix = 4;
 int place = 0;
+int place_type = 1;
 
 int N;
 obj *particles = NULL;
@@ -85,9 +86,30 @@ void run() {
 
 	Uint64 prev_time = SDL_GetPerformanceCounter();
 
+	vec2 mouse_pos;
+	mouse_pos.x = 0;
+	mouse_pos.y = 0;
+
 	int running = 1;
 	while (running) {
 		Uint64 frame_start = SDL_GetPerformanceCounter();
+
+		if (place == 1) {
+			int x_pos = mouse_pos.x;
+			int y_pos = mouse_pos.y;
+
+			particles[(y_pos)*N + x_pos].type = place_type;
+			if (y_pos < N - 1) {
+				particles[(1 + y_pos) * N + x_pos].type = place_type;
+			}
+			if (x_pos < N - 1) {
+				particles[(y_pos)*N + 1 + x_pos].type = place_type;
+				if (y_pos < N - 1) {
+					particles[(1 + y_pos) * N + 1 + x_pos].type = place_type;
+				}
+			}
+			memcpy(particles_next, particles, N * N * sizeof(obj));
+		}
 
 		while (SDL_PollEvent(&event) != 0) {
 			if (event.type == SDL_QUIT) {
@@ -101,7 +123,36 @@ void run() {
 				case SDLK_r:
 					generate();
 					break;
-
+				case SDLK_0:
+					place_type = 0;
+					break;
+				case SDLK_1:
+					place_type = 1;
+					break;
+				case SDLK_2:
+					place_type = 2;
+					break;
+				case SDLK_3:
+					place_type = 3;
+					break;
+				case SDLK_4:
+					place_type = 4;
+					break;
+				case SDLK_5:
+					place_type = 5;
+					break;
+				case SDLK_6:
+					place_type = 6;
+					break;
+				case SDLK_7:
+					place_type = 7;
+					break;
+				case SDLK_8:
+					place_type = 8;
+					break;
+				case SDLK_9:
+					place_type = 9;
+					break;
 				default:
 					break;
 				}
@@ -109,9 +160,11 @@ void run() {
 				place = 1;
 			} else if (event.type == SDL_MOUSEBUTTONUP) {
 				place = 0;
-			} else if (event.type == SDL_MOUSEMOTION && place == 1) {
-				particles[(event.button.y / pix) * N + event.button.x / pix].type = 1;
-				memcpy(particles_next, particles, N * N * sizeof(obj));
+			} else if (event.type == SDL_MOUSEMOTION) {
+				if (event.button.x >= 0 && event.button.y >= 0 && event.button.x < window_x && event.button.y < window_y) {
+					mouse_pos.x = event.button.x / pix;
+					mouse_pos.y = event.button.y / pix;
+				}
 			}
 		}
 
@@ -128,7 +181,7 @@ void run() {
 			counter = 0;
 			printf("frame: %fms (%f fps)\n", 1000.0 * frame_time, 1 / frame_time);
 		}
-		SDL_Delay(25);
+		SDL_Delay(2);
 	}
 }
 
