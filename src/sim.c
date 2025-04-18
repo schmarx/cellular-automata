@@ -5,25 +5,26 @@
 #define pn(x, y) (particles_next[(y) * N + (x)])
 
 #define check(p, PROP) ((materials[p.type] & PROP) == PROP)
+#define density(p1, p2) ((materials[p1.type] & DENSITY) > (materials[p2.type] & DENSITY))
 
 int materials[] = {
-	PROP_NONE | PROP_FLOW,			   // air
-	PROP_FALL | PROP_SINK | PROP_NORM, // sand
-	PROP_FALL | PROP_FLOW,			   // water
-	0,								   // rock
-	PROP_FALL | PROP_SINK | PROP_SOFT, // light sand
-	PROP_FALL | PROP_SINK | PROP_HARD, // heavy sand
-};
+	PROP_NONE | PROP_FLOW | 0b00,			  // air
+	PROP_FALL | PROP_SINK | PROP_NORM | 0b11, // sand
+	PROP_FALL | PROP_FLOW | PROP_NORM | 0b10, // water
+	0,										  // rock
+	PROP_FALL | PROP_SINK | PROP_SOFT | 0b11, // light sand
+	PROP_FALL | PROP_SINK | PROP_HARD | 0b11, // heavy sand
+	PROP_FALL | PROP_FLOW | PROP_NORM | 0b11, // dense liquid
+	PROP_FALL | PROP_SINK | PROP_NORM | 0b01, // cork
+	0,
+	0,
+	0};
 
 void update_pixel(int dest_x, int dest_y, int src_x, int src_y) {
 	int tmp_type = pn(dest_x, dest_y).type;
-	int tmp_vel = pn(dest_x, dest_y).vel;
 
 	pn(dest_x, dest_y).type = pn(src_x, src_y).type;
-	pn(dest_x, dest_y).vel = pn(src_x, src_y).vel;
-
 	pn(src_x, src_y).type = tmp_type;
-	pn(src_x, src_y).vel = tmp_vel;
 
 	particles_moving[dest_y * N + dest_x] = 1;
 }
@@ -44,7 +45,15 @@ void update_sand() {
 
 			// falling materials move through flowing materials
 			if (check(pn(x, y), PROP_FALL)) {
-				if (check(pn(x, y + 1), PROP_FLOW) && pn(x, y).type != pn(x, y + 1).type) {
+				if (check(pn(x, y + 1), PROP_NONE)) {
+					update_pixel(x, y + 1, x, y);
+				}
+			}
+
+			if (pn(x, y).type == 0) continue; // ignore air
+
+			if (check(pn(x, y), PROP_SINK)) {
+				if (pn(x, y).type != pn(x, y + 1).type && check(pn(x, y + 1), PROP_FLOW) && density(pn(x, y), pn(x, y + 1))) {
 					update_pixel(x, y + 1, x, y);
 				}
 			}
@@ -53,9 +62,9 @@ void update_sand() {
 
 			// materials with normal weight spread into flowing materials
 			if (check(pn(x, y), PROP_NORM)) {
-				if (x < N - 1 && check(pn(x + 1, y + 1), PROP_FLOW)) {
+				if (x < N - 1 && check(pn(x + 1, y + 1), PROP_FLOW) && density(pn(x, y), pn(x + 1, y + 1))) {
 					update_pixel(x + 1, y + 1, x, y);
-				} else if (x > 0 && check(pn(x - 1, y + 1), PROP_FLOW)) {
+				} else if (x > 0 && check(pn(x - 1, y + 1), PROP_FLOW) && density(pn(x, y), pn(x - 1, y + 1))) {
 					update_pixel(x - 1, y + 1, x, y);
 				}
 			}
@@ -92,30 +101,42 @@ void update_sand() {
 			if (check(pn(x, y), PROP_FLOW)) {
 				// TODO: this should not run if current pixel is the top pixel
 
-				int type = pn(x, y).type;
-				// attempt to move away if there is a pixel above of the same type
-				if (type == pn(x, y - 1).type) {
-					for (int dist = 1; x + dist < window_x; dist++) {
-						if (check(pn(x + dist, y), PROP_NONE)) {
-							// empty space to move into
-							update_pixel(x + dist, y, x, y);
-							goto end;
-						} else if (type != pn(x + dist, y).type) {
-							break;
-						}
-					}
-					for (int dist = 1; x - dist >= 0; dist++) {
-						if (check(pn(x - dist, y), PROP_NONE)) {
-							// empty space to move into
-							update_pixel(x - dist, y, x, y);
-							goto end;
-						} else if (type != pn(x - dist, y).type) {
-							break;
-						}
+				if (x + 1 < window_x && x > 0) {
+					int type = pn(x, y).type;
+					if (type == pn(x + 1, y).type && check(pn(x - 1, y), PROP_FLOW) && density(pn(x, y), pn(x - 1, y))) {
+						update_pixel(x - 1, y, x, y);
+					} else if (type == pn(x - 1, y).type && check(pn(x + 1, y), PROP_FLOW) && density(pn(x, y), pn(x + 1, y))) {
+						update_pixel(x + 1, y, x, y);
 					}
 				}
-			end:
 			}
+			// if (check(pn(x, y), PROP_FLOW)) {
+			// 	// TODO: this should not run if current pixel is the top pixel
+
+			// 	int type = pn(x, y).type;
+			// 	// attempt to move away if there is a pixel above of the same type
+			// 	if (type == pn(x, y - 1).type) {
+			// 		for (int dist = 1; x + dist < window_x; dist++) {
+			// 			if (check(pn(x + dist, y), PROP_NONE)) {
+			// 				// empty space to move into
+			// 				update_pixel(x + dist, y, x, y);
+			// 				goto end;
+			// 			} else if (type != pn(x + dist, y).type) {
+			// 				break;
+			// 			}
+			// 		}
+			// 		for (int dist = 1; x - dist >= 0; dist++) {
+			// 			if (check(pn(x - dist, y), PROP_NONE)) {
+			// 				// empty space to move into
+			// 				update_pixel(x - dist, y, x, y);
+			// 				goto end;
+			// 			} else if (type != pn(x - dist, y).type) {
+			// 				break;
+			// 			}
+			// 		}
+			// 	}
+			// end:
+			// }
 
 			// if (check(pn(x, y), PROP_FLOW)) {
 			// 	// flow sideways

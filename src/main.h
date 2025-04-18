@@ -1,13 +1,14 @@
 #include <SDL2/SDL.h>
 #define rng(max) (rand() % (max + 1))
 
-#define PROP_NONE 0b00000001
-#define PROP_FALL 0b00000010
-#define PROP_FLOW 0b00000100
-#define PROP_SINK 0b00001000
-#define PROP_SOFT 0b00010000
-#define PROP_NORM 0b00100000
-#define PROP_HARD 0b01000000
+#define DENSITY 0b0000000011
+#define PROP_NONE 0b0000000100
+#define PROP_FALL 0b0000001000
+#define PROP_FLOW 0b0000010000
+#define PROP_SINK 0b0000100000
+#define PROP_SOFT 0b0001000000
+#define PROP_NORM 0b0010000000
+#define PROP_HARD 0b0100000000
 
 extern SDL_Renderer *renderer;
 extern SDL_Texture *texture;
