@@ -19,6 +19,8 @@ int window_x = 500;
 int window_y = 500;
 
 int pix = 4;
+int brush_size = 0;
+
 int place = 0;
 int place_type = 1;
 
@@ -27,21 +29,16 @@ obj *particles = NULL;
 obj *particles_next = NULL;
 int *particles_moving = NULL;
 
-void sout(char *str) {
-	printf("%s\n", str);
-}
+SDL_Rect **rects = NULL;
 
 void generate() {
 	for (int i = 0; i < N * N; i++) {
 		particles[i].type = 0;
 	}
 
-	int size = 20;
-	for (int y = 0; y < size; y++) {
-		for (int x = 0; x < size; x++) {
-			particles[y * N + x + 2].type = 1;
-		}
-	}
+	// for (int i = 0; i < N; i++) {
+	// 	particles[N * N - i - 1].type = 2;
+	// }
 
 	memcpy(particles_next, particles, N * N * sizeof(obj));
 }
@@ -54,7 +51,7 @@ void init(char *args[]) {
 	srand(time(NULL));
 
 	SDL_Init(SDL_INIT_EVERYTHING);
-	SDL_CreateWindowAndRenderer(window_x, window_y, SDL_WINDOW_SHOWN, &window, &renderer);
+	SDL_CreateWindowAndRenderer(window_x, window_y + 50, SDL_WINDOW_SHOWN, &window, &renderer);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, 100, 100);
 
@@ -63,9 +60,15 @@ void init(char *args[]) {
 	// SDL_SetTextureColorMod(texture, 255, 255, 255);
 	// SDL_SetTextureAlphaMod(texture, 255);
 
-	particles = calloc(sizeof(obj), N * N);
-	particles_next = calloc(sizeof(obj), N * N);
-	particles_moving = calloc(sizeof(int), N * N);
+	particles = calloc(N * N, sizeof(obj));
+	particles_next = calloc(N * N, sizeof(obj));
+	particles_moving = calloc(N * N, sizeof(int));
+
+	rects = calloc(9, sizeof(SDL_Rect *));
+	for (int i = 0; i < 9; i++) {
+		rects[i] = calloc(N * N, sizeof(SDL_Rect));
+	}
+
 	generate();
 }
 
@@ -79,6 +82,12 @@ void end() {
 	free(particles);
 	free(particles_next);
 	free(particles_moving);
+
+	for (int i = 0; i < 9; i++) {
+		free(rects[i]);
+	}
+
+	free(rects);
 }
 
 void run() {
@@ -102,14 +111,11 @@ void run() {
 			int x_pos = mouse_pos.x;
 			int y_pos = mouse_pos.y;
 
-			particles[(y_pos)*N + x_pos].type = place_type;
-			if (y_pos < N - 1) {
-				particles[(1 + y_pos) * N + x_pos].type = place_type;
-			}
-			if (x_pos < N - 1) {
-				particles[(y_pos)*N + 1 + x_pos].type = place_type;
-				if (y_pos < N - 1) {
-					particles[(1 + y_pos) * N + 1 + x_pos].type = place_type;
+			if (y_pos < N - brush_size && y_pos >= brush_size && x_pos < N - brush_size && x_pos >= brush_size) {
+				for (int y = y_pos - brush_size; y < y_pos + brush_size + 1; y++) {
+					for (int x = x_pos - brush_size; x < x_pos + brush_size + 1; x++) {
+						particles[y * N + x].type = place_type;
+					}
 				}
 			}
 			memcpy(particles_next, particles, N * N * sizeof(obj));
@@ -157,6 +163,14 @@ void run() {
 				case SDLK_9:
 					place_type = 9;
 					break;
+				case SDLK_PLUS:
+				case SDLK_EQUALS:
+					brush_size++;
+					break;
+				case SDLK_MINUS:
+					brush_size--;
+					if (brush_size < 0) brush_size = 0;
+					break;
 				default:
 					break;
 				}
@@ -181,11 +195,11 @@ void run() {
 		Uint64 frame_end = SDL_GetPerformanceCounter();
 		float frame_time = (frame_end - frame_start) / (float)SDL_GetPerformanceFrequency();
 
-		if (counter++ == 5000) {
+		if (counter++ == 1000) {
 			counter = 0;
 			printf("frame: %fms (%f fps)\n", 1000.0 * frame_time, 1 / frame_time);
 		}
-		SDL_Delay(2);
+		// SDL_Delay(75);
 	}
 }
 
