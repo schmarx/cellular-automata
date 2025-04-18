@@ -31,14 +31,14 @@ void update_pixel(int dest_x, int dest_y, int src_x, int src_y) {
 void update_sand() {
 	memset(particles_moving, 0, N * N * sizeof(int));
 
-	int val = 2 * rng(1) - 1; // randomly -1 or +1
+	int dir = 2 * rng(1) - 1; // randomly -1 or +1
 
 	// NOTE: this loop does not run for materials on the screen floor
 	for (int y = N - 2; y >= 0; y--) {
 		for (int x_ind = 0; x_ind < N; x_ind++) {
 			// sand
 			int x = x_ind;
-			if (val == 1) x = N - x_ind - 1;
+			if (dir == 1) x = N - x_ind - 1;
 
 			if (pn(x, y).type == 0) continue; // ignore air
 
@@ -49,6 +49,8 @@ void update_sand() {
 				}
 			}
 
+			if (pn(x, y).type == 0) continue; // ignore air
+
 			// materials with normal weight spread into flowing materials
 			if (check(pn(x, y), PROP_NORM)) {
 				if (x < N - 1 && check(pn(x + 1, y + 1), PROP_FLOW)) {
@@ -57,6 +59,8 @@ void update_sand() {
 					update_pixel(x - 1, y + 1, x, y);
 				}
 			}
+
+			if (pn(x, y).type == 0) continue; // ignore air
 
 			// soft materials spread further to the sides
 			if (check(pn(x, y), PROP_SOFT)) {
@@ -69,6 +73,8 @@ void update_sand() {
 				}
 			}
 
+			if (pn(x, y).type == 0) continue; // ignore air
+
 			// hard materials spread less
 			if (check(pn(x, y), PROP_HARD)) {
 				if (y < N - 4) {
@@ -80,44 +86,35 @@ void update_sand() {
 				}
 			}
 
+			if (pn(x, y).type == 0) continue; // ignore air
+
 			// flowing materials spread out sideways
 			if (check(pn(x, y), PROP_FLOW)) {
-				// this checks the directions the material is able to move
-				int allow = 0;
-				if (x < N - 1 && check(pn(x + 1, y), PROP_NONE)) {
-					allow += 1;
-				}
-				if (x > 0 && check(pn(x - 1, y), PROP_NONE)) {
-					allow += 2;
-				}
+				// TODO: this should not run if current pixel is the top pixel
 
-				// this sets the velocity depending on the allowed direction
-				if (allow == 0) {
-					// if no direction is allowed remove velocity
-					pn(x, y).vel = 0;
-					continue;
-
-				} else if (allow == 1) {
-					// only moving right allowed
-					pn(x, y).vel = 1;
-				} else if (allow == 2) {
-					// only moving left allowed
-					pn(x, y).vel = -1;
-				} else if (allow == 3) {
-					// both allowed
-					// if a direction is already set we will keep that direction, else randomly choose a direction
-					if (pn(x, y).vel == 0) {
-						pn(x, y).vel = 2 * rng(1) - 1; // randomly -1 or +1
-					} else {
-						pn(x, y).vel *= 2;
+				int type = pn(x, y).type;
+				// attempt to move away if there is a pixel above of the same type
+				if (type == pn(x, y - 1).type) {
+					for (int dist = 1; x + dist < window_x; dist++) {
+						if (check(pn(x + dist, y), PROP_NONE)) {
+							// empty space to move into
+							update_pixel(x + dist, y, x, y);
+							goto end;
+						} else if (type != pn(x + dist, y).type) {
+							break;
+						}
+					}
+					for (int dist = 1; x - dist >= 0; dist++) {
+						if (check(pn(x - dist, y), PROP_NONE)) {
+							// empty space to move into
+							update_pixel(x - dist, y, x, y);
+							goto end;
+						} else if (type != pn(x - dist, y).type) {
+							break;
+						}
 					}
 				}
-
-				int vel = 0;
-				if (pn(x, y).vel > 0) vel = 1;
-				if (pn(x, y).vel < 0) vel = -1;
-				// update pixel based on the chosen velocity (may be zero)
-				update_pixel(x + vel, y, x, y);
+			end:
 			}
 
 			// if (check(pn(x, y), PROP_FLOW)) {
