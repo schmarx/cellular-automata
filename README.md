@@ -1,5 +1,5 @@
-## basic cellular automata
+## Basic cellular automata
 
-this features some basic update rules for different materials
+This features some basic update rules for different materials
 
-each cell is updated every simulation cycle based on specified properties of the material it currently contains
+Each cell is updated every simulation cycle based on specified properties of the material it currently contains
